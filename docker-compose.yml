@@ -1,43 +1,30 @@
 version: '3.8'
 
 services:
-  embedding-test:
+  pdf-search:
     build: .
-    container_name: uvm-embedding-test
+    container_name: pdf-search-app
+    ports:
+      - "8501:8501"
     volumes:
-      # 모델 캐시를 호스트에 저장 (재다운로드 방지)
-      - model_cache:/root/.cache/torch/sentence_transformers
-      # 테스트 결과를 호스트에 저장
+      # PDF 파일 업로드 디렉토리
+      - ./uploads:/app/uploads
+      # 결과 저장 디렉토리
       - ./results:/app/results
-      # 로컬 코드 개발용 (선택사항)
-      - ./embedding_test.py:/app/embedding_test.py
+      # 모델 캐시 디렉토리
+      - model_cache:/root/.cache/torch/sentence_transformers
     environment:
       - PYTHONUNBUFFERED=1
-    # GPU 사용시 (NVIDIA Docker 필요)
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
 
-  # Jupyter 노트북 서비스 (선택사항)
-  jupyter:
+  # 커맨드라인 버전
+  pdf-search-cli:
     build: .
-    container_name: uvm-jupyter
-    ports:
-      - "8888:8888"
+    container_name: pdf-search-cli
     volumes:
+      - ./uploads:/app/uploads
+      - ./results:/app/results
       - model_cache:/root/.cache/torch/sentence_transformers
-      - ./:/app
-    command: >
-      jupyter notebook 
-      --ip=0.0.0.0 
-      --port=8888 
-      --no-browser 
-      --allow-root 
-      --NotebookApp.token=''
+    command: python pdf_search_cli.py
     environment:
       - PYTHONUNBUFFERED=1
 
